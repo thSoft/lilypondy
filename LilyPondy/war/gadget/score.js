@@ -31,13 +31,15 @@ function setSize(size) {
 function stateUpdated() {
 	hide($("menu"));
 	if (getSource()) {
+		source = getSource();
+		encodedSource = encodeURIComponent(source);
 		$("loading").style.left = Math.max($("score").offsetLeft + $("score").width / 2 - $("loading").width / 2, 0);
 		$("loading").style.top = Math.max($("score").offsetTop + $("score").height / 2 - $("loading").height / 2, 0);
 		show($("loading"));
 		$("score").style.opacity = 0.5;
 		score = $("score");
-		score.src = services[random(services.length)] + "?q=" + encodeURIComponent(getSource()) + "&s=" + getSize();
-		score.title = getSource();
+		score.src = services[random(services.length)] + "?q=" + encodedSource + "&s=" + getSize();
+		score.title = source;
 	} else {
 		show($("editor"));
 	}
