@@ -1,0 +1,20 @@
+<extension
+		name="LilyPondy"
+		thumbnailUrl="http://lilypondy.appspot.com/images/avatar.png"
+		description="Enrich your waves with beautiful sheet music! Insert any LilyPond code between @@...@@.">
+	<author name="thSoft"/>
+	<menuHook
+			location="toolbar"
+			text="Add Score"
+			iconUrl="http://lilypondy.appspot.com/installer/lilypond.png">
+		<insertGadget url="http://lilypondy.appspot.com/gadget/score.xml"/>
+	</menuHook>
+	<menuHook
+			location="newwavemenu"
+			text="New Wave with Auto-Scores"
+			iconUrl="http://lilypondy.appspot.com/installer/lilypond.png">
+		<createNewWave>
+			<participant id="lilypondy@appspot.com"/>
+		</createNewWave>
+	</menuHook>
+</extension>

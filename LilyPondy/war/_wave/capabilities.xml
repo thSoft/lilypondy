@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns="http://wave.google.com/extensions/robots/1.0">
+	<capabilities>
+		<capability name="blip_submitted" content="true"/>
+	</capabilities>
+	<version>1</version>
+</robot>
