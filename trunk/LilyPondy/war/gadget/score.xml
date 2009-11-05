@@ -23,8 +23,7 @@
 <div id="editor" style="display: none">
 	<table>
 		<tr><td/><td><img src="http://lilypondy.appspot.com/gadget/icons/Up.png" onClick="$('source').rows -= 1"/></td><td/></tr>
-		<tr><td><img src="http://lilypondy.appspot.com/gadget/icons/Left.png" onClick="$('source').cols -= 1"/></td><td><img src="http://lilypondy.appspot.com/gadget/icons/Done.png" title="Done (Shift+Enter)" onClick="done()"/>
-</td><td><img src="http://lilypondy.appspot.com/gadget/icons/Right.png" onClick="$('source').cols += 1"/></td></tr>
+		<tr><td><img src="http://lilypondy.appspot.com/gadget/icons/Left.png" onClick="$('source').cols -= 1"/></td><td><img src="http://lilypondy.appspot.com/gadget/icons/Done.png" title="Done (Alt+Enter)" onClick="done()"/></td><td><img src="http://lilypondy.appspot.com/gadget/icons/Right.png" onClick="$('source').cols += 1"/></td></tr>
 		<tr><td/><td><img src="http://lilypondy.appspot.com/gadget/icons/Down.png" onClick="$('source').rows += 1"/></td><td/></tr>
 	</table>
 	<form action="">
