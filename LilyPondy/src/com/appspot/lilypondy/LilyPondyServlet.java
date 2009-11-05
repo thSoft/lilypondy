@@ -30,7 +30,9 @@ public class LilyPondyServlet extends AbstractRobotServlet {
 		boolean lilyPond = false;
 		for (String section : sections) {
 			if (section.length() == 0) { // The tag itself can be achieved by writing it twice
-				textView.append(TAG);
+				if (lilyPond) {
+					textView.append(TAG);
+				}
 			} else {
 				if (lilyPond) { // LilyPond code is replaced with the score gadget created from it
 					Gadget scoreGadget = new Gadget(LilyPondyProfileServlet.URL + "gadget/score.xml");

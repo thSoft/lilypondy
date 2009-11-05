@@ -1,4 +1,4 @@
-const services = ["http://localhost/lilypond-service/"]; // TODO
+const services = ["http://www.jastreich.com/lily/"];
 
 const defaultSize = 16;
 
@@ -36,7 +36,7 @@ function stateUpdated() {
 		show($("loading"));
 		$("score").style.opacity = 0.5;
 		score = $("score");
-		score.src = services[random(services.length)] + "?gmndata=" + encodeURIComponent(getSource()) + "&zoom=" + getSize() + "&crop=yes";
+		score.src = services[random(services.length)] + "?q=" + encodeURIComponent(getSource()) + "&s=" + getSize();
 		score.title = getSource();
 	} else {
 		show($("editor"));
