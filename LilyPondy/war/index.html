@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>LilyPondy</title>
+</head>
+<body>
+<h1>LilyPondy</h1>
+<p>LilyPondy is a set of Google Wave extensions which lets you include and edit musical examples in your waves typeset using <a href="http://lilypond.org">LilyPond</a>, the automated music engraving system.</p>
+<p>LilyPond has a simple syntax. If you are not familiar with it, you can start learning it <a href="http://lilypond.org/web/switch/howto">here</a>.</p>
+<h2>Installation</h2>
+<p>You can install the extensions from the public wave entitled LilyPondy Extension Installer. Search for <code>lilypondy extension installer with:public</code>, and in the first search result, click <em>Install extension</em>.</p>
+<h2>Gadget</h2>
+<p>After installation, when you're writing a wave, you can use the <em>Add Score</em> toolbar icon to insert a score at the cursor position. Or alternatively, you can add the gadget manually from <a href="http://lilypondy.appspot.com/gadget/score.xml">http://lilypondy.appspot.com/gadget/score.xml</a>.</p>
+<p>A text box appears in which you can edit the LilyPond source. While editing, you can resize it with the arrows to fit the text; when you're done, submit it with the tick mark or by pressing <em>Shift+Enter</em>.</p>
+<p>The LilyPond source is rendered after a while. You should see your score, or an error message if something went wrong. If you want to correct or augment it, you can update its source by clicking on the score and selecting <em>Edit Source</em> from the popup menu. You can also increase or decrease its size, or reset it to the default value.</p>
+<h2>Robot</h2>
+<p>There is a more convenient way to insert scores into your message: the robot will automatically recognize music fragments in your messages. Just create a <em>New Wave with Auto-Scores</em> from the New Wave menu. If you did not install the extension, or you want to enhance an already existing wave with this capability, add the robot at <a href="mailto:lilypondy@appspot.com">lilypondy@appspot.com</a> as a participant to the wave.</p>
+<p>You have to start and end LilyPond code snippets describing your music with a special string called tag: <code>@@</code> (double at sign). When your message is submitted, LilyPond code snippets will be replaced with the gadget containing the corresponding sheet music.</p>
+<p>For example, <code>@@{ c' }@@</code> gets substituted by <img src="images/example.png"/>.</p>
+<p>If you want to insert the tag (<code>@@</code>) into your message as text, write it twice (<code>@@@@</code>). Unfortunately, there is no way to insert the tag this way into LilyPond code snippets; you have to edit the LilyPond source of the score gadget after it is inserted.</p>
+<h2>Web service</h2>
+<p>In the background, LilyPond files are compiled by a web service: the heavy lifting is done in the cloud. Just like Google Wave, LilyPondy is also open in the sense that it not only uses LilyPond, the open source music typesetter, but also accepts any number of servers providing the LilyPond online compiler service, and distributes the load evenly among them.</p>
+<p>Since LilyPond requires a lot of resources, servers hosting the service are always welcome. The reference implementation only requires the latest stable version of PHP, LilyPond and ImageMagick. If you are willing to host it and set up a server, contact us and we will register your service provider. The community will be very grateful for the enhanced performance.</p>
+<h2>Use cases</h2>
+<p>Bringing ease-of-use music notation to the powerful platform of Google Wave opens up nearly endless possibilities. Just several of these:</p>
+<ul>
+<li>Authoring musicological treatises becomes much more simple: LilyPondy offers everything what <code>lilypond-book</code>, wiki or word processor plugins for LilyPond offer, but in a WYSIWYG environment having a more collaborative nature.</li>
+<li>Let's imagine that a tune pops into your mind, but you can't recall what exactly it is. Now you can ask your friend about the title of the melody without having the opportunity or ability to sing it.</li>
+<li>In combination with gadgets simulating musical instruments (for example the <a href="http://wave-instruments.appspot.com/gadget/piano.xml">Piano Gadget</a>), you can perform the scores online! This could serve educational purposes or it can be just fun.</li>
+</ul>
+</body>
+</html>
