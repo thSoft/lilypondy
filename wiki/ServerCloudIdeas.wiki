@@ -1,0 +1,7 @@
+#summary Ideas for server cloud implementation
+
+  * Don't store available servers in the source code. It should be a not source-controlled property file, later perhaps coming from a database.
+  * Timeouts, 500 and 503 errors coming from the servers should be handled. If one of them happens, the server should be put to "not available" state for an increasing amount of time. (Perhaps with different times for different errors.)
+  * 503 errors should be thrown by servers to limit their resources available for Lilypondy. For example if a server only accepts one request at a time, then it will throw 503 if still processing the previous request. 
+  * Special error codes should be used for errors like "this request takes too much time on this server, try an other one" (like HTTP 413), but a good way would be to communicate text in certain cases (lilypond errors etc.)
+  * Security: the lilypondy servers can serve malicious code, the client must check for validity (this might be trivial, as it only accepts PNG images)
