@@ -116,14 +116,18 @@ public class Renderer {
         runProcess(processBuilder);
     }
 
+    private File getPngFile() {
+        return new File(jailedBaseDir, uniqueName + ".png");
+    }
+    
     /**
      * Returns the file created as the result of the rendering.
      * @return
      */
     public File render() {
         File result = null;
-        File pngFile = new File(jailedBaseDir, uniqueName + ".png");
-        if (pngFile.length() > 0) {
+        File pngFile = getPngFile();
+        if (getAlreadyDone()) {
             result = pngFile;
         } else {
             try {
@@ -131,12 +135,16 @@ public class Renderer {
                 renderEps();
                 cropPng();
                 deleteTemporaryFiles();
-                result = new File(jailedBaseDir, uniqueName + ".png");
+                result = pngFile;
             } catch (RenderingException e) {
                 LOG.severe("Rendering failed:" + e.getMessage());
             }
         }
         return result;
+    }
+
+    public boolean getAlreadyDone() {
+        return getPngFile().length() > 0;
     }
 
 }

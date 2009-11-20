@@ -4,38 +4,20 @@ import javax.servlet.http.HttpServletResponse;
 
 public class QueueElement {
 
-    private String lilypondCode;
-    private int scoreSize;
-    private HttpServletResponse response;
+    private final Renderer renderer;
+    private final HttpServletResponse response;
     
-    public QueueElement(String lilypondCode, int scoreSize, HttpServletResponse response) {
-        this.lilypondCode = lilypondCode;
-        this.scoreSize = scoreSize;
+    public QueueElement(Renderer renderer, HttpServletResponse response) {
+        this.renderer = renderer;
         this.response = response;
-    }
-
-    public String getLilypondCode() {
-        return lilypondCode;
-    }
-
-    public void setLilypondCode(String lilypondCode) {
-        this.lilypondCode = lilypondCode;
-    }
-
-    public int getScoreSize() {
-        return scoreSize;
-    }
-
-    public void setScoreSize(int scoreSize) {
-        this.scoreSize = scoreSize;
     }
 
     public HttpServletResponse getResponse() {
         return response;
     }
 
-    public void setResponse(HttpServletResponse response) {
-        this.response = response;
+    public Renderer getRenderer() {
+        return renderer;
     }
 
 }
