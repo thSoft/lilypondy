@@ -14,11 +14,6 @@
     <display-name>LilyWaveServlet</display-name>
     <servlet-name>LilyWaveServlet</servlet-name>
     <servlet-class>hu.organum.lilypondwave.LilyWaveServlet</servlet-class>
-    <init-param>
-      <description></description>
-      <param-name>LILYPOND_COMMAND</param-name>
-      <param-value>lilypond</param-value>
-    </init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>LilyWaveServlet</servlet-name>
