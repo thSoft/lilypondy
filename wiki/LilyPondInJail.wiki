@@ -1,0 +1,101 @@
+#summary How to set up the server LilyPond for running in a chroot jail
+
+= Introduction =
+
+Setting up the server to run LilyPond in a chroot jail is a complicated task. See the necessary steps below (done on Ubuntu Linux - use `sudo` if appropriate):
+  
+  * Install the necessary packages: LilyPond, GhostScript and ImageMagick.
+  * Create a user with `adduser lily` - This will create a new group for the `lily` user as well, and a home folder, `/home/lily`
+  * In the home folder of this user create a file: 
+{{{
+dd if=/dev/zero of=/home/lily/loopfile bs=1k count=200000
+}}}
+  This will create 200MB file that will serve as a separate file system
+  * Create a loop device, make a file system and mount it, then create a folder which can be written by the `lily` user
+{{{
+mkdir /mnt/lilyloop
+losetup /dev/loop0 /home/lily/loopfile
+mkfs -t ext3 /dev/loop0 200000
+mount -t ext3 /dev/loop0 /mnt/lilyloop
+mkdir /mnt/lilyloop/lilyhome
+chown lily /mnt/lilyloop/lilyhome
+}}}
+  * In the configuration of the servers, the JAIL will be `/mnt/lilyloop` and the DIR will be `/lilyhome`
+  * Now you must create a big directory tree in this jail by copying the necessary files. Make sure you have the following in `/mnt/lilyloop` (Copy the files from the corresponding real root directories, so e.g. the contents of `bin` are coming from commands like `cp /bin/{bash,ls,rm,sh} /mnt/lilyloop/bin` Where there are folders listed, copy the entire folder, like `cp /usr/share/lilypond /mnt/lilyloop/usr/share'
+{{{
+bin: bash  ls  rm  sh
+lib: ld-linux.so.2  libbz2.so.1.0    libgcrypt.so.11    libselinux.so.1 libacl.so.1    libbz2.so.1.0.4  libgpg-error.so.0 libattr.so.1   libcom_err.so.2  libkeyutils.so.1 libbz2.so.1    libgcc_s.so.1    libncurses.so.5
+tmp (make it writable by everyone)
+usr/bin: convert gs
+usr/share: fonts ghostscript guile lilypond
+var/lib/defoma
+usr/lib:
+ImageMagick-6.3.7                libguile.so.17
+libasprintf.la                   libguile.so.17.1.2
+libasprintf.so                   libguile.so.17.2.0
+libasprintf.so.0                 libguile-srfi-srfi-13-14-v-3.la
+libasprintf.so.0.0.0             libguile-srfi-srfi-13-14-v-3.so
+libcom_err.so.2                  libguile-srfi-srfi-13-14-v-3.so.3
+libcupsimage.so.2                libguile-srfi-srfi-13-14-v-3.so.3.0.1
+libcups.so.2                     libguile-srfi-srfi-1-v-3.la
+libexpat.la                      libguile-srfi-srfi-1-v-3.so
+libexpat.so                      libguile-srfi-srfi-1-v-3.so.3
+libexpat.so.0                    libguile-srfi-srfi-1-v-3.so.3.0.1
+libexpat.so.0.5.0                libguile-srfi-srfi-1-v-3.so.3.0.2
+libexpat.so.1                    libguile-srfi-srfi-4-v-3.la
+libfontconfig.la                 libguile-srfi-srfi-4-v-3.so
+libfontconfig.so                 libguile-srfi-srfi-4-v-3.so.3
+libfontconfig.so.1               libguile-srfi-srfi-4-v-3.so.3.0.1
+libfontconfig.so.1.3.0           libguile-srfi-srfi-60-v-2.la
+libfreetype.la                   libguile-srfi-srfi-60-v-2.so
+libfreetype.so                   libguile-srfi-srfi-60-v-2.so.2
+libfreetype.so.6                 libguile-srfi-srfi-60-v-2.so.2.0.2
+libfreetype.so.6.3.18            libICE.so.6
+libfreetype.so.6.3.8             libjpeg.la
+libgettextlib-0.15.so            libjpeg.so
+libgettextlib.la                 libjpeg.so.62
+libgettextlib.so                 libjpeg.so.62.0.0
+libgettextpo.la                  libk5crypto.so.3
+libgettextpo.so                  libkrb5.so.3
+libgettextpo.so.0                libkrb5support.so.0
+libgettextpo.so.0.2.0            liblcms.so.1
+libgettextsrc-0.15.so            libltdl.la
+libgettextsrc.la                 libltdl.so
+libgettextsrc.so                 libltdl.so.3
+libgio-2.0.la                    libltdl.so.3.1.4
+libgio-2.0.so                    libMagick.so.10
+libgio-2.0.so.0                  libpaper.so.1
+libgio-2.0.so.0.0.0              libpcre.so.3
+libglib-2.0.la                   libpng12.la
+libglib-2.0.so                   libpng12.so
+libglib-2.0.so.0                 libpng12.so.0
+libglib-2.0.so.0.1600.1          libpng12.so.0.0.0
+libgmodule-2.0.la                libpng12.so.0.15.0
+libgmodule-2.0.so                libpng.la
+libgmodule-2.0.so.0              libpng.so
+libgmodule-2.0.so.0.1600.1       libpng.so.3
+libgmp.la                        libpng.so.3.0.0
+libgmp.so                        libpython2.4.so
+libgmp.so.3                      libpython2.4.so.1.0
+libgmp.so.3.4.1                  libSM.so.6
+libgnutls.so.13                  libstdc++.so.6
+libgobject-2.0.la                libtasn1.so.3
+libgobject-2.0.so                libtiff.so.4
+libgobject-2.0.so.0              libWand.so.10
+libgobject-2.0.so.0.1600.1       libX11.so.6
+libgssapi_krb5.so.2              libXau.so.6
+libgs.so.8                       libxcb.so.1
+libgthread-2.0.la                libxcb-xlib.so.0
+libgthread-2.0.so                libXdmcp.so.6
+libgthread-2.0.so.0              libXext.so.6
+libgthread-2.0.so.0.1600.1       libXt.so.6
+libguile.la                      libz.so
+libguilereadline-v-17.la         libz.so.1
+libguilereadline-v-17.so         libz.so.1.2.3
+libguilereadline-v-17.so.17      lilypond
+libguilereadline-v-17.so.17.0.3  preloadable_libintl.so
+libguile.so                      python2.4
+
+These are the libraries needed (the necessary libraries can be listed for a given executable using e.g. `ldd /usr/share/bin/lilypond`. 
+
+}}}
