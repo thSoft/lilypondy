@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -45,16 +48,8 @@ public class LilyWaveServlet extends HttpServlet {
                 try {
                     QueueElement queueElement = processingQueue.take();
                     synchronized (queueElement) {
-                        LOG.info("Code taken from queue");
-                        String lilypondCode = "\\header { tagline = \"\" }" + queueElement.getLilypondCode();
-                        int resolution = DEFAULT_RESOLUTION;
-                        int size = queueElement.getScoreSize();
-                        if (size > 64) {
-                            size = 64;
-                        }
-                        resolution = DEFAULT_RESOLUTION * size / DEFAULT_SIZE;
-                        LOG.info("start rendering");
-                        renderCode(lilypondCode, resolution, queueElement.getResponse());
+                        LOG.info("Code taken from queue, start rendering");
+                        renderCode(queueElement.getRenderer(), queueElement.getResponse());
                         LOG.info("rendering finished");
                         queueElement.notifyAll();
                     }
@@ -74,12 +69,27 @@ public class LilyWaveServlet extends HttpServlet {
         new Thread(new ProcessorWorker()).start();
     }
 
+    private Renderer createRenderer(String lilypondCode, int requestedSize) {
+        int size;
+        if (requestedSize > 64) {
+            size = 64;
+        } else {
+            size = requestedSize;
+        }
+        int resolution = DEFAULT_RESOLUTION * size / DEFAULT_SIZE;
+        Renderer renderer = new Renderer(settings, getUniqueFileName(lilypondCode, size), lilypondCode, resolution);
+        return renderer;
+
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String lilypondCode = request.getParameter(PARAM_SOURCE);
         if (lilypondCode == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
+        } else {
+            lilypondCode = "\\header { tagline = \"\" }" + lilypondCode;
         }
         int size;
         if (request.getParameter(PARAM_STAFF_SIZE) != null) {
@@ -87,29 +97,46 @@ public class LilyWaveServlet extends HttpServlet {
         } else {
             size = DEFAULT_SIZE;
         }
-        QueueElement queueElement = new QueueElement(lilypondCode, size, response);
-        try {
-            synchronized (queueElement) {
-                boolean insertedInQueue = processingQueue.offer(queueElement);
-                if (!insertedInQueue) {
-                    response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-                    return;
-                } else {
-                    queueElement.wait(settings.getInteger("REQUEST_TIMEOUT"));
+        Renderer renderer = createRenderer(lilypondCode, size);
+        if (renderer.getAlreadyDone()) {
+            renderCode(renderer, response);
+        } else {
+            QueueElement queueElement = new QueueElement(createRenderer(lilypondCode, size), response);
+            try {
+                synchronized (queueElement) {
+                    boolean insertedInQueue = processingQueue.offer(queueElement);
+                    if (!insertedInQueue) {
+                        response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                        return;
+                    } else {
+                        queueElement.wait(settings.getInteger("REQUEST_TIMEOUT"));
+                    }
                 }
+            } catch (InterruptedException e) {
+                LOG.warning("Given up waiting for element to be handled");
+                response.sendError(HttpServletResponse.SC_REQUEST_TIMEOUT);
             }
-        } catch (InterruptedException e) {
-            LOG.warning("Given up waiting for element to be handled");
-            response.sendError(HttpServletResponse.SC_REQUEST_TIMEOUT);
+
         }
     }
 
-    private String getUniqueFileName() {
-        return UUID.randomUUID().toString();
+    private String getUniqueFileName(String lilypondCode, int size) {
+        String digest = null;
+        try {
+            digest = Base64.encodeBytes(MessageDigest.getInstance("MD5").digest((lilypondCode + size).getBytes("UTF-8")));
+        } catch (NoSuchAlgorithmException e) {
+            LOG.warning(e.getMessage());
+        } catch (UnsupportedEncodingException e) {
+            LOG.warning(e.getMessage());
+        }
+        if (digest == null) {
+            digest = UUID.randomUUID().toString();
+        }
+        return digest;
     }
 
-    private void renderCode(String lilypondCode, int resolution, HttpServletResponse response) {
-        File renderingResult = new Renderer(settings, getUniqueFileName(), lilypondCode, resolution).render();
+    private void renderCode(Renderer renderer, HttpServletResponse response) {
+        File renderingResult = renderer.render();
         boolean success = false;
         if (renderingResult != null) {
             BufferedInputStream inputStream;
