@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -35,6 +38,8 @@ public class LilyWaveServlet extends HttpServlet {
     private Settings settings;
 
     private BlockingQueue<QueueElement> processingQueue;
+    
+    private Map<String, File> cacheIndex;
 
     /**
      * TODO: take more than one request a time (configurable)  
@@ -65,6 +70,18 @@ public class LilyWaveServlet extends HttpServlet {
     public void init() throws ServletException {
         settings = new Settings();
         processingQueue = new ArrayBlockingQueue<QueueElement>(Integer.valueOf(settings.get("QUEUE_CAPACITY")));
+        LinkedHashMap<String, File> cashMap = new LinkedHashMap<String, File>(settings.getInteger("CACHE_SIZE"), 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(java.util.Map.Entry<String, File> eldest) {
+                if (size() > settings.getInteger("CACHE_SIZE")) {
+                    eldest.getValue().delete();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
+        cacheIndex = Collections.synchronizedMap(cashMap);
         LOG.info("Servlet initialized");
         new Thread(new ProcessorWorker()).start();
     }
@@ -140,7 +157,8 @@ public class LilyWaveServlet extends HttpServlet {
     private void renderCode(Renderer renderer, HttpServletResponse response) {
         File renderingResult = renderer.render();
         boolean success = false;
-        if (renderingResult != null) {
+        if (renderingResult != null && renderingResult.exists()) {
+            cacheIndex.put(renderer.getUniqueName(), renderingResult);
             BufferedInputStream inputStream;
             try {
                 inputStream = new BufferedInputStream(new FileInputStream(renderingResult));
