@@ -1,0 +1,60 @@
+<project name="LilyWaveServlet" basedir="." default="build-war">
+
+	<property file="./build.properties" />
+	<property name="webapp.dir" value="${basedir}/WebContent" />
+	<property name="src.dir" value="${basedir}/src" />
+	<property name="resources.dir" value="${basedir}/resources" />
+	<property name="WEB-INF.dir" value="${webapp.dir}/WEB-INF" />
+	<property name="build.dir" value="${basedir}/tmp/bin" />
+	<property name="classes.dir" value="${build.dir}/classes" />
+	<property name="dist.dir" value="${basedir}/tmp/dist" />
+	<property name="lib.dir" value="${WEB-INF.dir}/lib" />
+
+	<property environment="env" />
+
+	<property name="project.distname" value="lilywaveservlet" />
+	<property name="project.title" value="lilywaveservlet" />
+	<property name="project.version" value="1.0" />
+	<property name="project.jar" value="${project.distname}-${project.version}.jar" />
+
+	<path id="compile.classpath">
+		<pathelement location="${resources.dir}" />
+		<pathelement location="${env.CATALINA_HOME}/lib/servlet-api.jar" />
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<target name="build-war" depends="compile-source">
+		<copy todir="${classes.dir}">
+			<fileset dir="${resources.dir}">
+				<include name="**" />
+			</fileset>
+		</copy>
+		<war destfile="${dist.dir}/${project.distname}.war" webxml="${WEB-INF.dir}/web.xml" compress="true">
+			<webinf dir="${WEB-INF.dir}">
+				<exclude name="web.xml" />
+			</webinf>
+			<webinf dir="${build.dir}" includes="build.properties" />
+			<classes dir="${classes.dir}" />
+			<zipfileset dir="${webapp.dir}" includes="*.*" />
+			<lib dir="${lib.dir}">
+				<include name="*.jar" />
+			</lib>
+		</war>
+	</target>
+
+	<target name="init">
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${dist.dir}" />
+	</target>
+
+	<target name="copy-files" depends="init">
+	</target>
+
+	<target name="compile-source" depends="copy-files">
+		<echo level="info">Compiling...</echo>
+		<javac debug="true" srcdir="${src.dir}" destdir="${classes.dir}" classpathref="compile.classpath" />
+	</target>
+
+</project>
