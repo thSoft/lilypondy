@@ -116,7 +116,7 @@ public class Renderer {
         runProcess(processBuilder);
     }
 
-    private File getPngFile() {
+    public File getPngFile() {
         return new File(jailedBaseDir, uniqueName + ".png");
     }
     
@@ -145,6 +145,10 @@ public class Renderer {
 
     public boolean getAlreadyDone() {
         return getPngFile().length() > 0;
+    }
+
+    public String getUniqueName() {
+        return uniqueName;
     }
 
 }
