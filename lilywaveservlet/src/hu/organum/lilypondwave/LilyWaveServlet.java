@@ -120,10 +120,12 @@ public class LilyWaveServlet extends HttpServlet {
         }
     }
 
+    
+    
     private String getUniqueFileName(String lilypondCode, int size) {
         String digest = null;
         try {
-            digest = Base64.encodeBytes(MessageDigest.getInstance("MD5").digest((lilypondCode + size).getBytes("UTF-8")));
+            digest = HexUtil.getHexString(MessageDigest.getInstance("MD5").digest((lilypondCode + size).getBytes("UTF-8")));
         } catch (NoSuchAlgorithmException e) {
             LOG.warning(e.getMessage());
         } catch (UnsupportedEncodingException e) {
