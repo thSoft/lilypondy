@@ -2,9 +2,9 @@
 
 = Introduction =
 
-Setting up the server to run LilyPond in a chroot jail is a complicated task. See the necessary steps below (done on Ubuntu Linux - use `sudo` if appropriate):
+Setting up the server to run LilyPond! in a chroot jail is a complicated task. See the necessary steps below (done on Ubuntu Linux - use `sudo` if appropriate):
   
-  * Install the necessary packages: LilyPond, GhostScript and ImageMagick.
+  * Install the necessary packages: LilyPond!, GhostScript! and ImageMagick!.
   * Create a user with `adduser lily` - This will create a new group for the `lily` user as well, and a home folder, `/home/lily`
   * In the home folder of this user create a file: 
 {{{
@@ -95,7 +95,6 @@ libguilereadline-v-17.so         libz.so.1.2.3
 libguilereadline-v-17.so.17      lilypond
 libguilereadline-v-17.so.17.0.3  preloadable_libintl.so
 libguile.so                      python2.4
-
-These are the libraries needed (the necessary libraries can be listed for a given executable using e.g. `ldd /usr/share/bin/lilypond`. 
-
 }}}
+
+These are the libraries needed (the necessary libraries can be listed for a given executable using e.g. `ldd /usr/share/bin/lilypond`). 
