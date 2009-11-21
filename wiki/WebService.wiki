@@ -1,28 +1,10 @@
-#summary The LilyPond WebService
-
-= Interface =
-
-== Arguments ==
+#summary The LilyPond WebService Interface Specification
 
 The GET parameters of the query are the following:
 || *Name* || *Meaning* || *Required?* || *Description* ||
 || `q` || !LilyPond source || yes || Of course it must be UTF-8 URL-encoded. ||
 || `s` || Staff size || no || The default value is 16, the maximum is 64. ||
 
-= Implementation =
-
-If you want to host the reference implementation, keep the following in mind.
-
-== Requirements ==
-
- * [http://php.net PHP]
- * [http://lilypond.org LilyPond]
- * [http://imagemagick.org ImageMagick]
-
-It is recommended to use the latest stable versions.
-
-== Configuration ==
-
-In `data/settings.ini`, write the path and command-line arguments of the !LilyPond and !ImageMagick executable.
-
-*WARNING:* Always run !LilyPond in safe mode by specifying the `-dsafe` option! An alternative is to run !LilyPond in a jail. Refer to [http://lilypond.org/doc/v2.13/Documentation/usage/Command_002dline-usage#Command-line-options-for-lilypond the description of the jail mode] for further information.
+TODO:
+ * error messages
+ * MIDI output
