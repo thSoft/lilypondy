@@ -97,4 +97,4 @@ libguilereadline-v-17.so.17.0.3  preloadable_libintl.so
 libguile.so                      python2.4
 }}}
 
-These are the libraries needed (the necessary libraries can be listed for a given executable using e.g. `ldd /usr/share/bin/lilypond`). 
+These are the libraries needed (the necessary libraries can be listed for a given executable using e.g. `ldd /usr/share/bin/lilypond`). (TODO: this might be too much, check what is really needed)
