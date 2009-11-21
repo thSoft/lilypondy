@@ -21,7 +21,7 @@ mkdir /mnt/lilyloop/lilyhome
 chown lily /mnt/lilyloop/lilyhome
 }}}
   * In the configuration of the servers, the JAIL will be `/mnt/lilyloop` and the DIR will be `/lilyhome`
-  * Now you must create a big directory tree in this jail by copying the necessary files. Make sure you have the following in `/mnt/lilyloop` (copy the files from the corresponding real root directories, so e.g. the contents of `bin` are coming from commands like `cp /bin/{bash,ls,rm,sh} /mnt/lilyloop/bin`; where there are folders listed, copy the entire folder, like `cp /usr/share/lilypond /mnt/lilyloop/usr/share'):
+  * Now you must create a big directory tree in this jail by copying the necessary files. Make sure you have the following in `/mnt/lilyloop` (copy the files from the corresponding real root directories, so e.g. the contents of `bin` are coming from commands like `cp /bin/{bash,ls,rm,sh} /mnt/lilyloop/bin`; where there are folders listed, copy the entire folder, like `cp /usr/share/lilypond /mnt/lilyloop/usr/share`):
 {{{
 bin: bash  ls  rm  sh
 lib: ld-linux.so.2  libbz2.so.1.0    libgcrypt.so.11    libselinux.so.1 libacl.so.1    libbz2.so.1.0.4  libgpg-error.so.0 libattr.so.1   libcom_err.so.2  libkeyutils.so.1 libbz2.so.1    libgcc_s.so.1    libncurses.so.5
