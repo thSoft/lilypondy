@@ -6,7 +6,7 @@ public class QueueElement {
 
     private final Renderer renderer;
     private final HttpServletResponse response;
-    
+
     public QueueElement(Renderer renderer, HttpServletResponse response) {
         this.renderer = renderer;
         this.response = response;

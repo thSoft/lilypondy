@@ -19,5 +19,4 @@ public class HexUtil {
         return new String(hex, "ASCII");
     }
 
-
 }

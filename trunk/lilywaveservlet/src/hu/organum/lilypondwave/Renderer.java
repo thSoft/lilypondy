@@ -119,7 +119,7 @@ public class Renderer {
     public File getPngFile() {
         return new File(jailedBaseDir, uniqueName + ".png");
     }
-    
+
     /**
      * Returns the file created as the result of the rendering.
      * @return

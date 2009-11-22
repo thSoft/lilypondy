@@ -6,13 +6,13 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 public class Settings {
-    
+
     private static final Logger LOG = Logger.getLogger(Settings.class.getName());
 
     private Properties defaultSettings = new Properties();
 
     private Properties customSettings = new Properties();
-    
+
     public Settings() {
         try {
             defaultSettings.load(getClass().getResourceAsStream("/default_settings.properties"));
@@ -41,9 +41,9 @@ public class Settings {
         }
         return value;
     }
-    
+
     public Integer getInteger(String key) {
         return Integer.valueOf(get(key));
     }
-    
+
 }
