@@ -16,6 +16,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * Servlet implementation class LilyWaveServlet
  */
@@ -36,9 +42,9 @@ public class LilyWaveServlet extends HttpServlet {
 
     private Map<String, File> cacheIndex;
 
-	/**
-	 * TODO: take more than one request a time (configurable)
-	 */
+    /**
+     * TODO: take more than one request a time (configurable)
+     */
     private class ProcessorWorker implements Runnable {
 
         @Override
@@ -84,7 +90,7 @@ public class LilyWaveServlet extends HttpServlet {
     private Renderer createRenderer(String lilypondCode, int requestedSize) {
         int size;
         if (requestedSize > MAX_SIZE) {
-			size = MAX_SIZE;
+            size = MAX_SIZE;
         } else {
             size = requestedSize;
         }
@@ -131,6 +137,7 @@ public class LilyWaveServlet extends HttpServlet {
 
         }
     }
+
 
 
     private String getUniqueFileName(String lilypondCode, int size) {
