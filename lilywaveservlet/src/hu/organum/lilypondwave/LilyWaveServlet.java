@@ -23,18 +23,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet implementation class LilyWaveServlet
+ * Servlet implementation class LilyWaveServlet.
  */
 public class LilyWaveServlet extends HttpServlet {
 
-		private static final Logger LOG = Logger.getLogger(LilyWaveServlet.class.getName());
+    private static final Logger LOG = Logger.getLogger(LilyWaveServlet.class.getName());
 
-    private final static String PARAM_SOURCE = "q";
-    private final static String PARAM_STAFF_SIZE = "s";
+    private static final String PARAM_SOURCE = "q";
+    private static final String PARAM_STAFF_SIZE = "s";
 
-    private final static int DEFAULT_RESOLUTION = 101;
-    private final static int DEFAULT_SIZE = 16;
-    private static final int MAX_SIZE = 64;
+    private static final int DEFAULT_RESOLUTION = 101;
+    private static final int DEFAULT_SIZE = 16;
+    private final static int MAX_SIZE = 64;
 
     private Settings settings;
 
@@ -137,8 +137,6 @@ public class LilyWaveServlet extends HttpServlet {
 
         }
     }
-
-
 
     private String getUniqueFileName(String lilypondCode, int size) {
         String digest = null;

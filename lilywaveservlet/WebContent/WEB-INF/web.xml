@@ -17,6 +17,6 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>LilyWaveServlet</servlet-name>
-    <url-pattern>/LilyWaveServlet</url-pattern>
+    <url-pattern>/score.do</url-pattern>
   </servlet-mapping>
 </web-app>
