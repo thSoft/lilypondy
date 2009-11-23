@@ -24,6 +24,11 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Servlet implementation class LilyWaveServlet.
+ * This servlet throws various error codes if something goes wrong:
+ * SC_BAD_REQUEST (400) - For errors that should be fixed by the client, ie. change parameters, change the code, make it shorter etc.
+ * SC_REQUEST_TIMEOUT (408) - The request could not be handled in the configured time.
+ * SC_SERVICE_UNAVAILABLE (503) - If the request should be processed by a different server, eg. the request can not fit in the queue.
+ * SC_NOT_FOUND (404) - If the requested rendered file could not be served. 
  */
 public class LilyWaveServlet extends HttpServlet {
 
@@ -154,7 +159,18 @@ public class LilyWaveServlet extends HttpServlet {
     }
 
     private void renderCode(Renderer renderer, HttpServletResponse response) {
-        File renderingResult = renderer.render();
+        File renderingResult = null;
+        try {
+            renderingResult = renderer.render();
+        } catch (RenderingException renderingException) {
+            String msg = "Rendering failed:" + renderingException.getMessage() + " verbose message: " + renderingException.getVerboseMessage();
+            LOG.severe(msg);
+            try {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+            } catch (IOException e) {
+                LOG.warning(e.getMessage());
+            }
+        }
         boolean success = false;
         if (renderingResult != null && renderingResult.exists()) {
             cacheIndex.put(renderer.getUniqueName(), renderingResult);
@@ -169,15 +185,15 @@ public class LilyWaveServlet extends HttpServlet {
                 }
                 outputStream.close();
                 success = true;
+                if (!success) {
+                    try {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    } catch (IOException e) {
+                        LOG.warning(e.getMessage());
+                    }
+                }
             } catch (FileNotFoundException e) {
                 LOG.warning(e.getMessage());
-            } catch (IOException e) {
-                LOG.warning(e.getMessage());
-            }
-        }
-        if (!success) {
-            try {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
             } catch (IOException e) {
                 LOG.warning(e.getMessage());
             }
@@ -189,7 +205,7 @@ public class LilyWaveServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+        doGet(request, response);
     }
 
 }

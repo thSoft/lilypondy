@@ -37,23 +37,27 @@ public class Renderer {
         return String.format(CONVERT_COMMAND_TEMPLATE, settings.get("JAIL"), settings.get("CONVERT_COMMAND"), pngName, pngName);
     }
 
-    private void runProcess(ProcessBuilder processBuilder) throws RenderingException {
-        processBuilder.redirectErrorStream(true);
+    private File getEpsFile() {
+        return new File(jailedBaseDir, uniqueName + "-1.eps");
+    }
+
+    private String runProcess(ProcessBuilder processBuilder) throws RenderingException {
         LOG.info("Starting process:" + processBuilder.command());
         try {
             Process process = processBuilder.start();
             process.waitFor();
-            BufferedReader is = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader errorStream = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             String line;
-            StringBuilder sb = new StringBuilder();
+            StringBuilder errorOutputBuilder = new StringBuilder();
             try {
-                while ((line = is.readLine()) != null) {
-                    sb.append(line);
+                while ((line = errorStream.readLine()) != null) {
+                    errorOutputBuilder.append(line);
                 }
             } catch (IOException e) {
                 throw new RenderingException(e.getMessage());
             }
-            LOG.info("command output:" + sb.toString());
+            LOG.info("command output:" + errorOutputBuilder.toString());
+            return errorOutputBuilder.toString();
         } catch (IOException e) {
             throw new RenderingException(e);
         } catch (InterruptedException e) {
@@ -73,32 +77,28 @@ public class Renderer {
         }
         String lilypondCommand = getLilypondCommand(uniqueName + ".ly");
         ProcessBuilder lilypondProcessBuilder = new ProcessBuilder("sh", "-c", lilypondCommand);
-        runProcess(lilypondProcessBuilder);
+        String lilyPondOutput = runProcess(lilypondProcessBuilder);
         tempFile.delete();
+        if (!getEpsFile().exists()) {
+            throw new RenderingException("EPS file doesn't exist", lilyPondOutput);
+        }
     }
 
     private void renderEps() throws RenderingException {
-        File epsFile = new File(jailedBaseDir, uniqueName + "-1.eps");
-        if (epsFile.exists()) {
-            String gsCommand = getGhostscriptCommand(baseDir.getAbsolutePath() + "/" + uniqueName, resolution);
-            ProcessBuilder gsProcessBuilder = new ProcessBuilder("sh", "-c", gsCommand);
-            gsProcessBuilder.redirectErrorStream(true);
-            runProcess(gsProcessBuilder);
-        } else {
-            throw new RenderingException("EPS file doesn't exist");
+        String gsCommand = getGhostscriptCommand(baseDir.getAbsolutePath() + "/" + uniqueName, resolution);
+        ProcessBuilder gsProcessBuilder = new ProcessBuilder("sh", "-c", gsCommand);
+        gsProcessBuilder.redirectErrorStream(true);
+        String gsErrorOutput = runProcess(gsProcessBuilder);
+        if (!getPngFile().exists()) {
+            throw new RenderingException("PNG file doesn't exist", gsErrorOutput);
         }
     }
 
     private void cropPng() throws RenderingException {
-        File pngFile = new File(jailedBaseDir, uniqueName + ".png");
-        if (pngFile.exists()) {
-            ProcessBuilder convertProcessBuilder = new ProcessBuilder();
-            String convertCommand = getConvertCommand(baseDir.getAbsolutePath() + "/" + uniqueName + ".png");
-            convertProcessBuilder.command("sh", "-c", convertCommand);
-            runProcess(convertProcessBuilder);
-        } else {
-            throw new RenderingException(pngFile.getAbsolutePath() + " doesn't exist");
-        }
+        ProcessBuilder convertProcessBuilder = new ProcessBuilder();
+        String convertCommand = getConvertCommand(baseDir.getAbsolutePath() + "/" + uniqueName + ".png");
+        convertProcessBuilder.command("sh", "-c", convertCommand);
+        runProcess(convertProcessBuilder);
     }
 
     public Renderer(Settings settings, String uniqueName, String lilypondCode, int resolution) {
@@ -124,21 +124,17 @@ public class Renderer {
      * Returns the file created as the result of the rendering.
      * @return
      */
-    public File render() {
+    public File render() throws RenderingException {
         File result = null;
         File pngFile = getPngFile();
         if (getAlreadyDone()) {
             result = pngFile;
         } else {
-            try {
-                renderLilyPond();
-                renderEps();
-                cropPng();
-                deleteTemporaryFiles();
-                result = pngFile;
-            } catch (RenderingException e) {
-                LOG.severe("Rendering failed:" + e.getMessage());
-            }
+            renderLilyPond();
+            renderEps();
+            cropPng();
+            deleteTemporaryFiles();
+            result = pngFile;
         }
         return result;
     }
