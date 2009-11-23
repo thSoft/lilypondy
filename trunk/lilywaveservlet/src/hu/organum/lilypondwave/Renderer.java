@@ -52,6 +52,7 @@ public class Renderer {
             try {
                 while ((line = errorStream.readLine()) != null) {
                     errorOutputBuilder.append(line);
+                    errorOutputBuilder.append('\n');
                 }
             } catch (IOException e) {
                 throw new RenderingException(e.getMessage());
