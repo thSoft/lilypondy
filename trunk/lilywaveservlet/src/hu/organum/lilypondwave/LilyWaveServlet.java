@@ -33,7 +33,7 @@ public class LilyWaveServlet extends HttpServlet {
     private static final String PARAM_STAFF_SIZE = "s";
 
     private static final int DEFAULT_RESOLUTION = 101;
-    private static final int DEFAULT_SIZE = 16;
+    private static final int DEFAULT_SIZE = 20;
     private final static int MAX_SIZE = 64;
 
     private Settings settings;
