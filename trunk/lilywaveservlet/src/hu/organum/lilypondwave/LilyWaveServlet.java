@@ -105,44 +105,6 @@ public class LilyWaveServlet extends HttpServlet {
 
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String lilypondCode = request.getParameter(PARAM_SOURCE);
-        if (lilypondCode == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        } else {
-            lilypondCode = "\\header { tagline = \"\" }" + lilypondCode;
-        }
-        int size;
-        if (request.getParameter(PARAM_STAFF_SIZE) != null) {
-            size = Integer.parseInt(request.getParameter(PARAM_STAFF_SIZE));
-        } else {
-            size = DEFAULT_SIZE;
-        }
-        Renderer renderer = createRenderer(lilypondCode, size);
-        if (renderer.getAlreadyDone()) {
-            renderCode(renderer, response);
-        } else {
-            QueueElement queueElement = new QueueElement(createRenderer(lilypondCode, size), response);
-            try {
-                synchronized (queueElement) {
-                    boolean insertedInQueue = processingQueue.offer(queueElement);
-                    if (!insertedInQueue) {
-                        response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-                        return;
-                    } else {
-                        queueElement.wait(settings.getInteger("REQUEST_TIMEOUT"));
-                    }
-                }
-            } catch (InterruptedException e) {
-                LOG.warning("Given up waiting for element to be handled");
-                response.sendError(HttpServletResponse.SC_REQUEST_TIMEOUT);
-            }
-
-        }
-    }
-
     private String getUniqueFileName(String lilypondCode, int size) {
         String digest = null;
         try {
@@ -200,12 +162,53 @@ public class LilyWaveServlet extends HttpServlet {
         }
     }
 
-    /**
-     * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-     */
+    protected void handleRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String lilypondCode = request.getParameter(PARAM_SOURCE);
+        if (lilypondCode == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        } else {
+            lilypondCode = "\\header { tagline = \"\" }" + lilypondCode;
+        }
+        int size;
+        if (request.getParameter(PARAM_STAFF_SIZE) != null) {
+            size = Integer.parseInt(request.getParameter(PARAM_STAFF_SIZE));
+        } else {
+            size = DEFAULT_SIZE;
+        }
+        Renderer renderer = createRenderer(lilypondCode, size);
+        if (renderer.getAlreadyDone()) {
+            renderCode(renderer, response);
+        } else {
+            QueueElement queueElement = new QueueElement(createRenderer(lilypondCode, size), response);
+            try {
+                synchronized (queueElement) {
+                    boolean insertedInQueue = processingQueue.offer(queueElement);
+                    if (!insertedInQueue) {
+                        response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                        return;
+                    } else {
+                        queueElement.wait(settings.getInteger("REQUEST_TIMEOUT"));
+                    }
+                }
+            } catch (InterruptedException e) {
+                LOG.warning("Given up waiting for element to be handled");
+                response.sendError(HttpServletResponse.SC_REQUEST_TIMEOUT);
+            }
+
+        }
+    }
+
+    
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        handleRequest(request, response);
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doGet(request, response);
+        handleRequest(request, response);
     }
+    
 
 }
