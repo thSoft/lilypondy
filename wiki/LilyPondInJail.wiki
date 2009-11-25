@@ -99,6 +99,11 @@ libguile.so                      python2.4
 
 These are the libraries needed (the necessary libraries can be listed for a given executable using e.g. `ldd /usr/share/bin/lilypond`). (TODO: this might be too much, check what is really needed)
 
+You can use `sed` to create the necessary copy commands for a given executable:
+{{{
+ldd  /usr/local/lilypond/usr/bin/lilypond | sed 's/.*=> \/\([^(]*\).*/cp \/\1 \1/' | sed 's/\t\/\(.*\) (.*)$/cp \/\1 \1/' | sed '/.*=>.*/d'
+}}}
+
 = Summary =
 
 See below some example script to automate this process
