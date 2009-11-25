@@ -101,7 +101,7 @@ These are the libraries needed (the necessary libraries can be listed for a give
 
 You can use `sed` to create the necessary copy commands for a given executable:
 {{{
-ldd  /usr/local/lilypond/usr/bin/lilypond | sed 's/.*=> \/\([^(]*\).*/cp \/\1 \1/' | sed 's/\t\/\(.*\) (.*)$/cp \/\1 \1/' | sed '/.*=>.*/d'
+ldd  /usr/local/lilypond/usr/bin/lilypond | sed 's/.*=> \/\(.*\/\)\([^(]*\).*/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed 's/\t\/\(.*\/\)\(.*\) (.*)$/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed '/.*=>.*/d'
 }}}
 
 = Summary =
