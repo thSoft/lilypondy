@@ -112,10 +112,23 @@ See below some example script to automate this process
 == Example script for 32-bit Ubuntu 8.04 ==
 {{{
 #!/bin/sh
+## defaults set here
 
-}}}
+username=lily
+home=/home
+loopdevice=/dev/loop0
+jaildir=/mnt/lilyloop
 
-== Example script for 64-bit Ubuntu 9.04 ==
-{{{
-#!/bin/sh
+userhome=$home/$username
+loopfile=$userhome/loopfile
+adduser $username
+dd if=/dev/zero of=$loopfile bs=1k count=200000
+mkdir $jaildir
+losetup $loopdevice $loopfile
+mkfs -t ext3 $loopdevice 200000
+mount -t ext3 $loopdevice $jaildir
+mkdir $jaildir/lilyhome
+chown $username $jaildir/lilyhome
+cd $jaildir
+
 }}}
