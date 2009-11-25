@@ -100,8 +100,9 @@ libguile.so                      python2.4
 These are the libraries needed (the necessary libraries can be listed for a given executable using e.g. `ldd /usr/share/bin/lilypond`). (TODO: this might be too much, check what is really needed)
 
 You can use `sed` to create the necessary copy commands for a given executable:
+
 {{{
-ldd  /usr/local/lilypond/usr/bin/lilypond | sed 's/.*=> \/\(.*\/\)\([^(]*\).*/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed 's/\t\/\(.*\/\)\(.*\) (.*)$/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed '/.*=>.*/d'
+for i in "/usr/local/lilypond/usr/bin/lilypond" "/bin/sh"; do ldd $i | sed 's/.*=> \/\(.*\/\)\([^(]*\).*/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed 's/\t\/\(.*\/\)\(.*\) (.*)$/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed '/.*=>.*/d'; done
 }}}
 
 = Summary =
@@ -111,6 +112,7 @@ See below some example script to automate this process
 == Example script for 32-bit Ubuntu 8.04 ==
 {{{
 #!/bin/sh
+
 }}}
 
 == Example script for 64-bit Ubuntu 9.04 ==
