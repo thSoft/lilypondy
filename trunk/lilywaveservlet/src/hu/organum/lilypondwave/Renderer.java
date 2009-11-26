@@ -12,7 +12,7 @@ public class Renderer {
     private static final Logger LOG = Logger.getLogger(Renderer.class.getName());
 
     private final static String LILYPOND_COMMAND_TEMPLATE = "%s -fps -dbackend=eps -ddelete-intermediate-files -j%s,%s,%s,%s %s";
-    private final static String GS_COMMAND_TEMPLATE = "chroot %s %s -dEPSCrop -dGraphicsAlphaBits=4 -dTextAlphaBits=4 -dNOPAUSE -sDEVICE=png16m -sOutputFile=\"%s.png\" -r%d \"%s-1.eps\" -c quit";
+    private final static String GS_COMMAND_TEMPLATE = "chroot %s %s -dEPSCrop -dGraphicsAlphaBits=4 -dTextAlphaBits=4 -dNOPAUSE -sDEVICE=png16m -sOutputFile=\"/%s.png\" -r%d \"%s/%s-1.eps\" -c quit";
     private final static String CONVERT_COMMAND_TEMPLATE = "chroot %s %s -trim %s %s";
     private final static String DELETE_COMMAND_TEMPLATE = "chroot %s sh -c \"cd %s && rm -f *.tex *.texi *.count *.eps *.ly\"";
 
@@ -23,14 +23,15 @@ public class Renderer {
     private final int resolution;
     private final Settings settings;
 
+    private File jailDir;
+
     private String getLilypondCommand(String renderedFileName) {
         return String.format(LILYPOND_COMMAND_TEMPLATE, settings.get("LILYPOND_COMMAND"), settings.get("USER"), settings.get("GROUP"), settings
                 .get("JAIL"), settings.get("DIR"), renderedFileName);
     }
 
-    private String getGhostscriptCommand(String renderedFileNameWithoutExtension, int resolution) {
-        return String.format(GS_COMMAND_TEMPLATE, settings.get("JAIL"), settings.get("GS_COMMAND"), renderedFileNameWithoutExtension, resolution,
-                renderedFileNameWithoutExtension);
+    private String getGhostscriptCommand() {
+        return String.format(GS_COMMAND_TEMPLATE, jailDir, settings.get("GS_COMMAND"), uniqueName, resolution, baseDir, uniqueName);
     }
 
     private String getConvertCommand(String pngName) {
@@ -42,11 +43,12 @@ public class Renderer {
     }
 
     private String runProcess(ProcessBuilder processBuilder) throws RenderingException {
+        processBuilder.redirectErrorStream(true);
         LOG.info("Starting process:" + processBuilder.command());
         try {
             Process process = processBuilder.start();
             process.waitFor();
-            BufferedReader errorStream = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            BufferedReader errorStream = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             StringBuilder errorOutputBuilder = new StringBuilder();
             try {
@@ -86,7 +88,7 @@ public class Renderer {
     }
 
     private void renderEps() throws RenderingException {
-        String gsCommand = getGhostscriptCommand(baseDir.getAbsolutePath() + "/" + uniqueName, resolution);
+        String gsCommand = getGhostscriptCommand();
         ProcessBuilder gsProcessBuilder = new ProcessBuilder("sh", "-c", gsCommand);
         gsProcessBuilder.redirectErrorStream(true);
         String gsErrorOutput = runProcess(gsProcessBuilder);
@@ -97,7 +99,7 @@ public class Renderer {
 
     private void cropPng() throws RenderingException {
         ProcessBuilder convertProcessBuilder = new ProcessBuilder();
-        String convertCommand = getConvertCommand(baseDir.getAbsolutePath() + "/" + uniqueName + ".png");
+        String convertCommand = getConvertCommand(uniqueName + ".png");
         convertProcessBuilder.command("sh", "-c", convertCommand);
         runProcess(convertProcessBuilder);
     }
@@ -109,6 +111,7 @@ public class Renderer {
         this.resolution = resolution;
         this.baseDir = new File(settings.get("DIR"));
         this.jailedBaseDir = new File(settings.get("JAIL") + settings.get("DIR"));
+        this.jailDir = new File(settings.get("JAIL"));
     }
 
     private void deleteTemporaryFiles() throws RenderingException {
@@ -118,7 +121,7 @@ public class Renderer {
     }
 
     public File getPngFile() {
-        return new File(jailedBaseDir, uniqueName + ".png");
+        return new File(jailDir, uniqueName + ".png");
     }
 
     /**
