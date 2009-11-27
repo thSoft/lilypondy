@@ -22,9 +22,9 @@ chown lily /mnt/lilyloop/lilyhome
 }}}
   * In the configuration of the servers, the JAIL will be `/mnt/lilyloop` and the DIR will be `/lilyhome`
   * Now you must create a big directory tree in this jail by copying the necessary files. 
-The example script will show you how to do this.
+  The example script will show you how to do this.
 
-You can use `sed` to create the necessary copy commands for a given executable:
+  You can use `sed` to create the necessary copy commands for a given executable:
 
 {{{
 for i in "/usr/local/lilypond/usr/bin/lilypond" "/bin/sh" "/usr/bin/; do ldd $i | sed 's/.*=> \/\(.*\/\)\([^(]*\).*/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed 's/\t\/\(.*\/\)\(.*\) (.*)$/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed '/.*=>.*/d'; done
