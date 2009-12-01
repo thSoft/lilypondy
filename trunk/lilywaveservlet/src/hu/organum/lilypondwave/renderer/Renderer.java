@@ -1,4 +1,6 @@
-package hu.organum.lilypondwave;
+package hu.organum.lilypondwave.renderer;
+
+import hu.organum.lilypondwave.common.Settings;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -33,8 +35,9 @@ public class Renderer {
         replacements.put("group", settings.get("GROUP"));
         replacements.put("jail", jailDir.getPath());
         replacements.put("dir", baseDir.getPath());
-
-        replacements.put("resolution", resolution.toString());
+        if (resolution != null) {
+            replacements.put("resolution", resolution.toString());
+        }
         replacements.put("hash", uniqueName);
         replacements.put("ly", uniqueName + ".ly");
         replacements.put("png", uniqueName + ".png");
