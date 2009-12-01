@@ -1,4 +1,4 @@
-package hu.organum.lilypondwave;
+package hu.organum.lilypondwave.renderer;
 
 import java.io.BufferedReader;
 import java.io.IOException;

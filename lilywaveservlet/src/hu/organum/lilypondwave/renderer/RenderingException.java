@@ -1,6 +1,6 @@
-package hu.organum.lilypondwave;
+package hu.organum.lilypondwave.renderer;
 
-class RenderingException extends Exception {
+public class RenderingException extends Exception {
 
     private String verboseMessage;
     

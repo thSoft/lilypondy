@@ -4,11 +4,7 @@
   <display-name>lilywaveservlet</display-name>
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
-    <welcome-file>index.htm</welcome-file>
     <welcome-file>index.jsp</welcome-file>
-    <welcome-file>default.html</welcome-file>
-    <welcome-file>default.htm</welcome-file>
-    <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
   <filter>
     <filter-name>requestCharacterEncodingFilter</filter-name>
@@ -22,7 +18,7 @@
     <description></description>
     <display-name>LilyWaveServlet</display-name>
     <servlet-name>LilyWaveServlet</servlet-name>
-    <servlet-class>hu.organum.lilypondwave.LilyWaveServlet</servlet-class>
+    <servlet-class>hu.organum.lilypondwave.servlet.LilyWaveServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>LilyWaveServlet</servlet-name>

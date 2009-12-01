@@ -1,4 +1,4 @@
-package hu.organum.lilypondwave;
+package hu.organum.lilypondwave.common;
 
 import java.io.UnsupportedEncodingException;
 

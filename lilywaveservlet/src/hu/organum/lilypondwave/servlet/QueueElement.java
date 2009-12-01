@@ -1,4 +1,6 @@
-package hu.organum.lilypondwave;
+package hu.organum.lilypondwave.servlet;
+
+import hu.organum.lilypondwave.renderer.Renderer;
 
 import javax.servlet.http.HttpServletResponse;
 
