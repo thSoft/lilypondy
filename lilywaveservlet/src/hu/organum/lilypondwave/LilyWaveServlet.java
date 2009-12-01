@@ -36,6 +36,8 @@ public class LilyWaveServlet extends HttpServlet {
 
     private static final String PARAM_SOURCE = "q";
     private static final String PARAM_STAFF_SIZE = "s";
+    private static final String PARAM_TYPE = "t";
+    private static final String PARAM_HASH = "h";
 
     private static final int DEFAULT_RESOLUTION = 101;
     private static final int DEFAULT_SIZE = 20;
