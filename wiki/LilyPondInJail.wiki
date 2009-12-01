@@ -43,9 +43,10 @@ username=lily
 home=/home
 loopdevice=/dev/loop0
 jaildir=/mnt/lilyloop
-# the directory where lilypond is installed on the system
+# the prefix (without the leading slash!)
 lilyprefix=usr/local
-lilydir=$lilyprefix/lilypond/
+# the directory where lilypond is installed on the system
+lilydir=/$lilyprefix/lilypond/
 
 userhome=$home/$username
 loopfile=$userhome/loopfile
