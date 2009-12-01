@@ -44,7 +44,8 @@ home=/home
 loopdevice=/dev/loop0
 jaildir=/mnt/lilyloop
 # the directory where lilypond is installed on the system
-lilydir=/usr/local/lilypond/
+lilyprefix=usr/local
+lilydir=$lilyprefix/lilypond/
 
 userhome=$home/$username
 loopfile=$userhome/loopfile
@@ -58,10 +59,10 @@ mkdir $jaildir/lilyhome
 chown $username $jaildir/lilyhome
 cd $jaildir
 
-mkdir -p bin usr/bin usr/share usr/lib usr/local tmp
+mkdir -p bin usr/bin usr/share usr/lib $lilyprefix tmp
 chmod a+w tmp
 
-cp -r -L $lilydir usr/local
+cp -r -L $lilydir $lilyprefix
 cp -L /bin/sh /bin/rm bin
 cp -L /usr/bin/convert /usr/bin/gs usr/bin
 
@@ -74,7 +75,7 @@ cp -L -r /usr/share/ghostscript usr/share
 cp -L -r /usr/lib/ImageMagick* usr/lib
 
 ### Now, assuming that you have test.ly in /mnt/lilyloop/lilyhome, you should be able to run:
-### Note that /usr/local/bin/lilypond is a script, which sets the LD_LIBRARY_PATH - this is crucial
-/usr/local/bin/lilypond -jlily,lily,/mnt/lilyloop,/lilyhome test.ly
+### Note that /$lilyprefix/bin/lilypond is a script, which sets the LD_LIBRARY_PATH - this is crucial
+/$lilyprefix/bin/lilypond -jlily,lily,/mnt/lilyloop,/lilyhome test.ly
 
 }}}
