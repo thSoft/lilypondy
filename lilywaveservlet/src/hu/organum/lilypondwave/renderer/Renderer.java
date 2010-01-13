@@ -13,8 +13,8 @@ import java.util.Map;
 public class Renderer {
 
     private final static String LILYPOND_COMMAND_TEMPLATE = "$lilypond -fps -dbackend=eps -ddelete-intermediate-files -j$user,$group,$jail,$dir $ly";
-    private final static String GS_COMMAND_TEMPLATE = "chroot $jail $gs -dEPSCrop -dGraphicsAlphaBits=4 -dTextAlphaBits=4 -dNOPAUSE -sDEVICE=png16m -sOutputFile=\"/$hash.png\" -r$resolution \"$dir/$hash-1.eps\" -c quit";
-    private final static String CONVERT_COMMAND_TEMPLATE = "chroot $jail $convert -trim $png $png";
+    private final static String GS_COMMAND_TEMPLATE = "$gs -dEPSCrop -dGraphicsAlphaBits=4 -dTextAlphaBits=4 -dNOPAUSE -sDEVICE=png16m -sOutputFile=\"/$hash.png\" -r$resolution \"$dir\\$hash-1.eps\" -c quit";
+	private final static String CONVERT_COMMAND_TEMPLATE = "$convert -trim $png $png";
     private final static String DELETE_COMMAND_TEMPLATE = "chroot $jail sh -c \"cd $dir && rm -f *.tex *.texi *.count *.eps *.ly\"";
 
     private File baseDir;
@@ -43,8 +43,16 @@ public class Renderer {
         replacements.put("png", uniqueName + ".png");
         return replacements;
     }
+    
+    private List<ProcessingCommand> renderTestPng() throws RenderingException {
+        List<ProcessingCommand> commands = new ArrayList<ProcessingCommand>();
+        ProcessingCommand processingCommand = new ProcessingCommand("$lilypond --png --output=$jail\\$hash $jail$dir\\$ly",
+				new ResultValidator());
+    	commands.add(processingCommand);
+    	return commands;
+    }
 
-    private void renderCroppedPng() throws RenderingException {
+    private List<ProcessingCommand> renderCroppedPng() throws RenderingException {
         List<ProcessingCommand> commands = new ArrayList<ProcessingCommand>();
         commands.add(new ProcessingCommand(LILYPOND_COMMAND_TEMPLATE, new ResultValidator() {
             @Override
@@ -68,21 +76,16 @@ public class Renderer {
                 return "Ghostscript processing failed";
             }
         }));
-        
         commands.add(new ProcessingCommand(CONVERT_COMMAND_TEMPLATE, new ResultValidator()));
         commands.add(new ProcessingCommand(DELETE_COMMAND_TEMPLATE, new ResultValidator()));
-        
-        Map<String, String> replacements = getReplacements();
-        for (ProcessingCommand command : commands) {
-            command.execute(replacements);
-        }
+        return commands;
     }
 
     private File getEpsFile() {
         return new File(jailedBaseDir, uniqueName + "-1.eps");
     }
 
-    private void renderLilyPondCode() throws RenderingException {
+    private void renderLilyPondCode(List<ProcessingCommand> commands) throws RenderingException {
         File tempFile = new File(jailedBaseDir, uniqueName + ".ly");
         FileWriter fileWriter;
         try {
@@ -93,7 +96,10 @@ public class Renderer {
             throw new RenderingException(e);
         }
         try {
-            renderCroppedPng();
+            Map<String, String> replacements = getReplacements();
+			for (ProcessingCommand command : commands) {
+				command.execute(replacements);
+			}	    	
         } finally {
             tempFile.delete();
         }
@@ -123,7 +129,11 @@ public class Renderer {
         if (getAlreadyDone()) {
             result = pngFile;
         } else {
-            renderLilyPondCode();
+        	if ("true".equals(settings.get("TEST"))) {
+        		renderLilyPondCode(renderTestPng());
+			} else {
+				renderLilyPondCode(renderCroppedPng());
+			}
             result = pngFile;
         }
         return result;

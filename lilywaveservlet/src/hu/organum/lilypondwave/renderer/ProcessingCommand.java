@@ -16,7 +16,7 @@ public class ProcessingCommand {
     private String getCommand(Map<String, String> replacements) {
         String command = template;
         for (Entry<String, String> replacement : replacements.entrySet()) {
-            command = command.replaceAll("\\$" + replacement.getKey(), replacement.getValue());
+            command = command.replaceAll("\\$" + replacement.getKey(), replacement.getValue().replaceAll("\\\\", "\\\\\\\\"));
         }
         return command;
     }
@@ -26,7 +26,6 @@ public class ProcessingCommand {
         LOG.info("Starting process:" + processBuilder.command());
         try {
             Process process = processBuilder.start();
-            process.waitFor();
             BufferedReader errorStream = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             StringBuilder errorOutputBuilder = new StringBuilder();
@@ -39,6 +38,7 @@ public class ProcessingCommand {
                 throw new RenderingException(e.getMessage());
             }
             LOG.info("command output:" + errorOutputBuilder.toString());
+            process.waitFor();            
             return errorOutputBuilder.toString();
         } catch (IOException e) {
             throw new RenderingException(e);
@@ -54,13 +54,21 @@ public class ProcessingCommand {
 
     public void execute(Map<String, String> replacements) throws RenderingException {
         String commandString = getCommand(replacements);
-        ProcessBuilder lilypondProcessBuilder = new ProcessBuilder("sh", "-c", commandString);
+        ProcessBuilder lilypondProcessBuilder;
+		if (!isWindows()) {
+			lilypondProcessBuilder = new ProcessBuilder("sh", "-c", commandString);
+		} else {
+			lilypondProcessBuilder = new ProcessBuilder("cmd", "/c", commandString);
+		}
         String output = runProcess(lilypondProcessBuilder);
         if (!resultValidator.isOk()) {
             throw new RenderingException(resultValidator.getMessage(), output);
         }
     }
     
-    
+    public static final boolean isWindows() {
+		return System.getProperty("os.name").toLowerCase().contains("windows");
+	}
+
     
 }
