@@ -171,6 +171,7 @@ public class LilyWaveServlet extends HttpServlet {
 			LOG.severe(msg);
 			try {
 				response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+				return;
 			} catch (IOException e) {
 				LOG.warning(e.getMessage());
 			}
