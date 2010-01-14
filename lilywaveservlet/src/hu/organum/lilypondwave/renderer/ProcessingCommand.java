@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 public class ProcessingCommand {
@@ -14,11 +13,7 @@ public class ProcessingCommand {
     private final String template;
 
     private String getCommand(Map<String, String> replacements) {
-        String command = template;
-        for (Entry<String, String> replacement : replacements.entrySet()) {
-            command = command.replaceAll("\\$" + replacement.getKey(), replacement.getValue().replaceAll("\\\\", "\\\\\\\\"));
-        }
-        return command;
+    	return Commands.applyReplacements(template, replacements);
     }
     
     private String runProcess(ProcessBuilder processBuilder) throws RenderingException {
@@ -53,7 +48,7 @@ public class ProcessingCommand {
     }
 
     public void execute(Map<String, String> replacements) throws RenderingException {
-        String commandString = getCommand(replacements);
+		String commandString = getCommand(replacements);
         ProcessBuilder lilypondProcessBuilder;
 		if (!isWindows()) {
 			lilypondProcessBuilder = new ProcessBuilder("sh", "-c", commandString);
@@ -61,7 +56,7 @@ public class ProcessingCommand {
 			lilypondProcessBuilder = new ProcessBuilder("cmd", "/c", commandString);
 		}
         String output = runProcess(lilypondProcessBuilder);
-        if (!resultValidator.isOk()) {
+        if (!resultValidator.isOk(replacements)) {
             throw new RenderingException(resultValidator.getMessage(), output);
         }
     }
