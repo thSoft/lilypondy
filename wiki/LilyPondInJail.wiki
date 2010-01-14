@@ -60,12 +60,13 @@ mkdir $jaildir/lilyhome
 chown $username $jaildir/lilyhome
 cd $jaildir
 
-mkdir -p bin usr/bin usr/share usr/lib $lilyprefix tmp
+mkdir -p bin usr/bin usr/share usr/lib usr/share/fonts $lilyprefix tmp
 chmod a+w tmp
 
 cp -r -L $lilydir $lilyprefix
 cp -L /bin/sh /bin/rm bin
 cp -L /usr/bin/convert /usr/bin/gs usr/bin
+cp -L /usr/share/fonts/truetype usr/share/fonts
 
 # Now the library copying magic
 for i in "$lilydir/usr/bin/lilypond" "$lilydir/usr/bin/guile" "/bin/sh" "/bin/rm" "/usr/bin/gs" "/usr/bin/convert"; do ldd $i | sed 's/.*=> \/\(.*\/\)\([^(]*\).*/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed 's/\t\/\(.*\/\)\(.*\) (.*)$/mkdir -p \1 \&\& cp -L \/\1\2 \1\2/' | sed '/.*=>.*/d'; done | sh -s
