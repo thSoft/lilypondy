@@ -4,19 +4,25 @@ import hu.organum.lilypondwave.common.HexUtil;
 import hu.organum.lilypondwave.common.Settings;
 import hu.organum.lilypondwave.renderer.Renderer;
 import hu.organum.lilypondwave.renderer.RenderingException;
+import hu.organum.lilypondwave.renderer.RenderingResult;
+import hu.organum.lilypondwave.renderer.ResultFileType;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
@@ -55,7 +61,7 @@ public class LilyWaveServlet extends HttpServlet {
 
 	private BlockingQueue<QueueElement> processingQueue;
 
-	private Map<String, File> cacheIndex;
+	private Map<String, RenderingResult> cacheIndex;
 
 	/**
 	 * TODO: take more than one request a time (configurable)
@@ -70,7 +76,8 @@ public class LilyWaveServlet extends HttpServlet {
 					QueueElement queueElement = processingQueue.take();
 					synchronized (queueElement) {
 						LOG.info("Code taken from queue, start rendering");
-						renderCode(queueElement.getRenderer(), queueElement.getResponse(), queueElement.isHashOnly());
+						renderCode(queueElement.getRenderer(), queueElement.getResponse(), queueElement.isHashOnly(), queueElement
+								.getResultFileType());
 						LOG.info("rendering finished");
 						queueElement.notifyAll();
 					}
@@ -86,9 +93,9 @@ public class LilyWaveServlet extends HttpServlet {
 	public void init() throws ServletException {
 		settings = new Settings();
 		processingQueue = new ArrayBlockingQueue<QueueElement>(Integer.valueOf(settings.get("QUEUE_CAPACITY")));
-		LinkedHashMap<String, File> cacheMap = new LinkedHashMap<String, File>(settings.getInteger("CACHE_SIZE"), 0.75f, true) {
+		LinkedHashMap<String, RenderingResult> cacheMap = new LinkedHashMap<String, RenderingResult>(settings.getInteger("CACHE_SIZE"), 0.75f, true) {
 			@Override
-			protected boolean removeEldestEntry(java.util.Map.Entry<String, File> eldest) {
+			protected boolean removeEldestEntry(java.util.Map.Entry<String, RenderingResult> eldest) {
 				if (size() > settings.getInteger("CACHE_SIZE")) {
 					eldest.getValue().delete();
 					return true;
@@ -102,7 +109,7 @@ public class LilyWaveServlet extends HttpServlet {
 		new Thread(new ProcessorWorker()).start();
 	}
 
-	private Renderer createRenderer(String lilypondCode, int requestedSize) {
+	private Renderer createRenderer(String lilypondCode, String featureName, int requestedSize) {
 		int size;
 		if (requestedSize > MAX_SIZE) {
 			size = MAX_SIZE;
@@ -110,7 +117,7 @@ public class LilyWaveServlet extends HttpServlet {
 			size = requestedSize;
 		}
 		int resolution = DEFAULT_RESOLUTION * size / DEFAULT_SIZE;
-		Renderer renderer = new Renderer(settings, getUniqueFileName(lilypondCode, size), lilypondCode, resolution);
+		Renderer renderer = new Renderer(settings, getUniqueFileName(lilypondCode, size), lilypondCode, featureName, resolution);
 		return renderer;
 
 	}
@@ -130,12 +137,14 @@ public class LilyWaveServlet extends HttpServlet {
 		return digest;
 	}
 
-	private void returnImage(File renderingResult, HttpServletResponse response) {
+	private void returnResult(RenderingResult renderingResult, HttpServletResponse response, ResultFileType requestedType) {
 		boolean success = false;
 		BufferedInputStream inputStream;
 		try {
-			inputStream = new BufferedInputStream(new FileInputStream(renderingResult));
-			response.setContentType("image/png");
+			File file = new File(renderingResult.getFile().getParent(), renderingResult.getHash() + "." + requestedType.getExtension());
+			inputStream = new BufferedInputStream(new FileInputStream(file));
+			// TODO set content name, disposition etc.
+			response.setContentType(requestedType.getMimeType());
 			ServletOutputStream outputStream = response.getOutputStream();
 			int b = -1;
 			while ((b = inputStream.read()) != -1) {
@@ -157,13 +166,34 @@ public class LilyWaveServlet extends HttpServlet {
 		}
 	}
 
-	private void renderCachedContent(String hash, HttpServletResponse response) {
-		File renderingResult = cacheIndex.get(hash);
-		returnImage(renderingResult, response);
+	private void renderCachedContent(String hash, HttpServletResponse response, ResultFileType requestedType) {
+		RenderingResult renderingResult = cacheIndex.get(hash);
+		returnResult(renderingResult, response, requestedType);
 	}
 
-	private void renderCode(Renderer renderer, HttpServletResponse response, boolean hashOnly) {
-		File renderingResult = null;
+	private String createJson(Map<String, Object> map) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("{");
+		for (Iterator<Map.Entry<String, Object>> iterator = map.entrySet().iterator(); iterator.hasNext();) {
+			Entry<String, Object> entry = iterator.next();
+			Object value = entry.getValue();
+			String jsonValue;
+			if (value instanceof String) {
+				jsonValue = "\"" + value + "\"";
+			} else {
+				jsonValue = String.valueOf(value);
+			}
+			sb.append(String.format("%s:%s", entry.getKey(), jsonValue));
+			if (iterator.hasNext()) {
+				sb.append(',');
+			}
+		}
+		sb.append('}');
+		return sb.toString();
+	}
+
+	private void renderCode(Renderer renderer, HttpServletResponse response, boolean hashOnly, ResultFileType requestedType) {
+		RenderingResult renderingResult = null;
 		try {
 			renderingResult = renderer.render();
 		} catch (RenderingException renderingException) {
@@ -179,11 +209,19 @@ public class LilyWaveServlet extends HttpServlet {
 		if (renderingResult != null && renderingResult.exists()) {
 			cacheIndex.put(renderer.getUniqueName(), renderingResult);
 			if (!hashOnly) {
-				returnImage(renderingResult, response);
+				returnResult(renderingResult, response, requestedType);
 			} else {
 				response.setContentType("text/plain");
 				try {
-					response.getWriter().write(renderer.getUniqueName());
+					Map<String, Object> values = new HashMap<String, Object>();
+					values.put("hash", renderer.getUniqueName());
+					for (ResultFileType resultFileType : ResultFileType.values()) {
+						if (renderer.resultExists(resultFileType)) {
+							values.put(resultFileType.name(), true);
+						}
+					}
+					PrintWriter out = response.getWriter();
+					out.write(createJson(values));
 					response.getWriter().close();
 				} catch (IOException e) {
 					LOG.warning(e.getMessage());
@@ -206,7 +244,7 @@ public class LilyWaveServlet extends HttpServlet {
 			return;
 		}
 		if (request.getParameter(PARAM_HASHCODE) != null) {
-			renderCachedContent(request.getParameter(PARAM_HASHCODE), response);
+			renderCachedContent(request.getParameter(PARAM_HASHCODE), response, ResultFileType.valueOf(request.getParameter(PARAM_TYPE)));
 			return;
 		}
 		int size;
@@ -215,11 +253,25 @@ public class LilyWaveServlet extends HttpServlet {
 		} else {
 			size = DEFAULT_SIZE;
 		}
-		Renderer renderer = createRenderer(lilypondCode, size);
-		if (renderer.getAlreadyDone()) {
-			renderCode(renderer, response, request.getParameter(PARAM_RETURNHASH) != null);
+		// TODO get featureName from request parameter
+		String featureName;
+		if ("true".equals(settings.get("TEST"))) {
+			featureName = "testPng";
 		} else {
-			QueueElement queueElement = new QueueElement(createRenderer(lilypondCode, size), response, request.getParameter(PARAM_RETURNHASH) != null);
+			featureName = "firstPagePng";
+		}
+		Renderer renderer = createRenderer(lilypondCode, featureName, size);
+		ResultFileType resultFileType;
+		if (request.getParameter(PARAM_TYPE) != null) {
+			resultFileType = ResultFileType.valueOf(request.getParameter(PARAM_TYPE));
+		} else {
+			resultFileType = ResultFileType.PNG;
+		}
+		if (renderer.getAlreadyDone()) {
+			renderCode(renderer, response, request.getParameter(PARAM_RETURNHASH) != null, resultFileType);
+		} else {
+			QueueElement queueElement = new QueueElement(createRenderer(lilypondCode, featureName, size), response, request
+					.getParameter(PARAM_RETURNHASH) != null, resultFileType);
 			try {
 				synchronized (queueElement) {
 					boolean insertedInQueue = processingQueue.offer(queueElement);
