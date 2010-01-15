@@ -4,16 +4,16 @@ if (trim($query) == "") {
 	$empty = true;
 } else {
 	$resolution = 101;
-	$defaultSize = 16;
+	$defaultSize = 20;
 	$size = floatval($_GET[s]);
 	if ($size > 0) {
 		if ($size > 64) {
 			$size = 64;
 		}
-		$resolution *= $size / $defaultSize;
 	} else {
 		$size = $defaultSize;
 	}
+	$resolution *= $size / $defaultSize;
 	
 	$id = hash("sha1", $query);
 	$dir = "cache/$id";
