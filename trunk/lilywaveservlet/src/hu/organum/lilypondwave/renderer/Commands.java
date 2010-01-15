@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 public class Commands {
 
+	private static final ResultFileType DEFAULT_RESULT_FILE_TYPE = ResultFileType.PNG;
 	private static final Logger LOG = Logger.getLogger(Commands.class.getName());
 	private static Properties commands;
 
@@ -44,6 +45,17 @@ public class Commands {
 		};
 		ProcessingCommand command = new ProcessingCommand(template, resultValidator);
 		return command;
+	}
+	
+	public static ResultFileType getResultFileType(String featureName) {
+		String resultFileTypeName = commands.getProperty(String.format("feature.%s.resultFileType", featureName));
+		ResultFileType resultFileType;
+		if (resultFileTypeName != null) {
+			resultFileType = ResultFileType.valueOf(resultFileTypeName);
+		} else {
+			resultFileType = DEFAULT_RESULT_FILE_TYPE;
+		}
+		return resultFileType;
 	}
 	
 	public static List<ProcessingCommand> getCommandList(String featureName) {

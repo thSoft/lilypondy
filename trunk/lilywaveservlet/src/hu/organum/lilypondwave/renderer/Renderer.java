@@ -21,6 +21,7 @@ public class Renderer {
 	private final Settings settings;
 
 	private File jailDir;
+	private final String featureName;
 
 	private Map<String, String> getReplacements() {
 		Map<String, String> replacements = new HashMap<String, String>();
@@ -59,18 +60,24 @@ public class Renderer {
 		}
 	}
 
-	public Renderer(Settings settings, String uniqueName, String lilypondCode, int resolution) {
+	public Renderer(Settings settings, String uniqueName, String lilypondCode, String featureName, int resolution) {
 		this.settings = settings;
 		this.uniqueName = uniqueName;
 		this.lilypondCode = lilypondCode;
+		this.featureName = featureName;
 		this.resolution = resolution;
 		this.baseDir = new File(settings.get("DIR"));
 		this.jailedBaseDir = new File(settings.get("JAIL") + settings.get("DIR"));
 		this.jailDir = new File(settings.get("JAIL"));
 	}
+	
+	public File getResultFile(ResultFileType resultFileType) {
+		return new File(jailDir, uniqueName + "." + resultFileType.getExtension());
+	}
 
-	public File getPngFile() {
-		return new File(jailDir, uniqueName + ".png");
+	public File getResultFile() {
+		ResultFileType resultFileType = Commands.getResultFileType(featureName);
+		return getResultFile(resultFileType);
 	}
 
 	/**
@@ -78,20 +85,13 @@ public class Renderer {
 	 * 
 	 * @return
 	 */
-	public File render() throws RenderingException {
+	public RenderingResult render() throws RenderingException {
 		try {
-			File result = null;
-			File pngFile = getPngFile();
-			if (getAlreadyDone()) {
-				result = pngFile;
-			} else {
-				if ("true".equals(settings.get("TEST"))) {
-					renderLilyPondCode(Commands.getCommandList("testPng"));
-				} else {
-					renderLilyPondCode(Commands.getCommandList("firstPagePng"));
-				}
-				result = pngFile;
+			File resultFile = getResultFile();
+			if (!getAlreadyDone()) {
+				renderLilyPondCode(Commands.getCommandList(featureName));
 			}
+			RenderingResult result = new RenderingResult(resultFile, uniqueName, Commands.getResultFileType(featureName));
 			return result;
 		} catch (RuntimeException e) {
 			e.printStackTrace();
@@ -100,11 +100,15 @@ public class Renderer {
 	}
 
 	public boolean getAlreadyDone() {
-		return getPngFile().length() > 0;
+		return getResultFile().length() > 0;
 	}
 
 	public String getUniqueName() {
 		return uniqueName;
+	}
+
+	public boolean resultExists(ResultFileType resultFileType) {
+		return getResultFile(resultFileType).length() > 0;
 	}
 
 }

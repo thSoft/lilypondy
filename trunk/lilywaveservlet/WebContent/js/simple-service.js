@@ -6,7 +6,21 @@
 	}
 	
 	var typesetSuccessHandler = function(result) {
-		$("#resultImage").attr("src", "/score.do?h="+result);
+		$("#resultImage").attr("src", "/score.do?t=PNG&h="+result.hash);
+		if (true === result.MIDI) {
+			$("#midiLink").show();
+			$("#midiLink a").attr("href", "/score.do?t=MIDI&h="+result.hash);
+		}
+		if (true === result.PDF) {
+			$("#pdfLink").show();
+			$("#pdfLink a").attr("href", "/score.do?t=PDF&h="+result.hash);
+		}
+		if (true === result.PNG) {
+			$("#pngLink").show();
+			$("#pngLink a").attr("href", "/score.do?t=PNG&h="+result.hash);
+		}
+
+
 	}
 	
 	var typesetHandler = function() {
@@ -15,7 +29,7 @@
 			type: "POST",
 			url: "/score.do",
 			data: { q: $("#query").val(), s: $("#size").val(), rh: "1" },
-			dataType: "text",
+			dataType: "json",
 			error: errorHandler,
 			success: typesetSuccessHandler
 		});
