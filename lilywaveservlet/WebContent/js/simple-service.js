@@ -24,6 +24,9 @@
 	}
 	
 	var typesetHandler = function() {
+		$("#midiLink").hide();
+		$("#pdfLink").hide();
+		$("#pngLink").hide();
 		$("#resultImage").attr("src", "/img/ajax-loader.gif");		
 		$.ajax({
 			type: "POST",
