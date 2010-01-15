@@ -247,6 +247,7 @@ public class LilyWaveServlet extends HttpServlet {
 			renderCachedContent(request.getParameter(PARAM_HASHCODE), response, ResultFileType.valueOf(request.getParameter(PARAM_TYPE)));
 			return;
 		}
+        lilypondCode = "\\header { tagline = \"\" }" + lilypondCode;
 		int size;
 		if (request.getParameter(PARAM_STAFF_SIZE) != null) {
 			size = Integer.parseInt(request.getParameter(PARAM_STAFF_SIZE));

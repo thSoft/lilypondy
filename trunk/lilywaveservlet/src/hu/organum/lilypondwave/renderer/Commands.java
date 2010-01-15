@@ -26,6 +26,9 @@ public class Commands {
 
 	public static ProcessingCommand getCommand(String commandName) {
 		String template = commands.getProperty(String.format("command.%s.template", commandName));
+		if (template == null) {
+			LOG.severe("template not found for command " + commandName);
+		}
 		final String resultFileName = commands.getProperty(String.format("command.%s.result.file", commandName));
 		final String errorMessage = commands.getProperty(String.format("command.%s.result.error", commandName));
 		ResultValidator resultValidator = new ResultValidator() {
@@ -75,7 +78,13 @@ public class Commands {
 	public static String applyReplacements(String original, Map<String, String> replacements) {
 		String result = original;
 		for (Entry<String, String> replacement : replacements.entrySet()) {
-			result = result.replaceAll("\\$" + replacement.getKey(), replacement.getValue().replaceAll("\\\\", "\\\\\\\\"));
+			String key = replacement.getKey();
+			String value = replacement.getValue();
+			if (value == null) {
+				LOG.warning(String.format("Replacement error: %s -> %s", key, value));
+			} else {
+				result = result.replaceAll("\\$" + key, value.replaceAll("\\\\", "\\\\\\\\"));
+			}
 		}
 		return result;
 

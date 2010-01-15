@@ -29,6 +29,7 @@
 		<copy todir="${classes.dir}">
 			<fileset dir="${resources.dir}">
 				<include name="**" />
+				<exclude name="settings.properties" />
 			</fileset>
 		</copy>
 		<war destfile="${dist.dir}/${project.distname}.war" webxml="${WEB-INF.dir}/web.xml" compress="true">
@@ -37,6 +38,8 @@
 			</webinf>
 			<webinf dir="${build.dir}" includes="build.properties" />
 			<classes dir="${classes.dir}" />
+			<zipfileset dir="${webapp.dir}/img" prefix="img" />
+			<zipfileset dir="${webapp.dir}/js" prefix="js" />
 			<zipfileset dir="${webapp.dir}" includes="*.*" />
 			<lib dir="${lib.dir}">
 				<include name="*.jar" />
