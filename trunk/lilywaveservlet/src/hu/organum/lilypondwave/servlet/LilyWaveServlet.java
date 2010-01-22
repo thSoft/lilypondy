@@ -3,6 +3,7 @@ package hu.organum.lilypondwave.servlet;
 import hu.organum.lilypondwave.common.HexUtil;
 import hu.organum.lilypondwave.common.Settings;
 import hu.organum.lilypondwave.renderer.Renderer;
+import hu.organum.lilypondwave.renderer.RendererConfiguration;
 import hu.organum.lilypondwave.renderer.RenderingException;
 import hu.organum.lilypondwave.renderer.RenderingResult;
 import hu.organum.lilypondwave.renderer.ResultFileType;
@@ -46,12 +47,15 @@ public class LilyWaveServlet extends HttpServlet {
 	private static final String PARAM_SOURCE = "q";
 	private static final String PARAM_STAFF_SIZE = "s";
 	private static final String PARAM_TYPE = "t";
+	
 	/**
 	 * If this parameter is set then only the hash code is returned upon success.
 	 */
 	private static final String PARAM_RETURNHASH = "rh";
 
 	private static final String PARAM_HASHCODE = "h";
+	
+	private static final String PARAM_JSONP_CALLBACK = "jsonp";
 
 	private static final int DEFAULT_RESOLUTION = 101;
 	private static final int DEFAULT_SIZE = 20;
@@ -76,8 +80,7 @@ public class LilyWaveServlet extends HttpServlet {
 					QueueElement queueElement = processingQueue.take();
 					synchronized (queueElement) {
 						LOG.info("Code taken from queue, start rendering");
-						renderCode(queueElement.getRenderer(), queueElement.getResponse(), queueElement.isHashOnly(), queueElement
-								.getResultFileType());
+						renderCode(queueElement);
 						LOG.info("rendering finished");
 						queueElement.notifyAll();
 					}
@@ -109,7 +112,7 @@ public class LilyWaveServlet extends HttpServlet {
 		new Thread(new ProcessorWorker()).start();
 	}
 
-	private Renderer createRenderer(String lilypondCode, String featureName, int requestedSize) {
+    private Renderer createRenderer(String lilypondCode, String featureName, int requestedSize) {
 		int size;
 		if (requestedSize > MAX_SIZE) {
 			size = MAX_SIZE;
@@ -117,7 +120,12 @@ public class LilyWaveServlet extends HttpServlet {
 			size = requestedSize;
 		}
 		int resolution = DEFAULT_RESOLUTION * size / DEFAULT_SIZE;
-		Renderer renderer = new Renderer(settings, getUniqueFileName(lilypondCode, size), lilypondCode, featureName, resolution);
+		RendererConfiguration config = new RendererConfiguration();
+        config.setUniqueName(getUniqueFileName(lilypondCode, size));
+        config.setLilypondCode(lilypondCode);
+        config.setFeatureName(featureName);
+        config.setResolution(resolution);
+        Renderer renderer = new Renderer(settings, config);
 		return renderer;
 
 	}
@@ -192,7 +200,8 @@ public class LilyWaveServlet extends HttpServlet {
 		return sb.toString();
 	}
 
-	private void renderCode(Renderer renderer, HttpServletResponse response, boolean hashOnly, ResultFileType requestedType) {
+	private void renderCode(QueueElement element) {
+        Renderer renderer = element.getRenderer();
 		RenderingResult renderingResult = null;
 		try {
 			renderingResult = renderer.render();
@@ -200,7 +209,7 @@ public class LilyWaveServlet extends HttpServlet {
 			String msg = "Rendering failed:" + renderingException.getMessage() + " verbose message: " + renderingException.getVerboseMessage();
 			LOG.severe(msg);
 			try {
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+				element.getResponse().sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
 				return;
 			} catch (IOException e) {
 				LOG.warning(e.getMessage());
@@ -208,10 +217,10 @@ public class LilyWaveServlet extends HttpServlet {
 		}
 		if (renderingResult != null && renderingResult.exists()) {
 			cacheIndex.put(renderer.getUniqueName(), renderingResult);
-			if (!hashOnly) {
-				returnResult(renderingResult, response, requestedType);
+			if (!element.isHashOnly()) {
+                returnResult(renderingResult, element.getResponse(), element.getResultFileType());
 			} else {
-				response.setContentType("text/plain");
+				element.getResponse().setContentType("text/plain");
 				try {
 					Map<String, Object> values = new HashMap<String, Object>();
 					values.put("hash", renderer.getUniqueName());
@@ -220,16 +229,20 @@ public class LilyWaveServlet extends HttpServlet {
 							values.put(resultFileType.name(), true);
 						}
 					}
-					PrintWriter out = response.getWriter();
-					out.write(createJson(values));
-					response.getWriter().close();
+					PrintWriter out = element.getResponse().getWriter();
+					String json = createJson(values);
+                    if (element.getJsonpCallback() != null) {
+                        json = String.format("%s(%s)", element.getJsonpCallback(), json);
+                    }
+                    out.write(json);
+					element.getResponse().getWriter().close();
 				} catch (IOException e) {
 					LOG.warning(e.getMessage());
 				}
 			}
 		} else {
 			try {
-				response.sendError(HttpServletResponse.SC_NOT_FOUND);
+				element.getResponse().sendError(HttpServletResponse.SC_NOT_FOUND);
 			} catch (IOException e) {
 				LOG.warning(e.getMessage());
 			}
@@ -269,10 +282,12 @@ public class LilyWaveServlet extends HttpServlet {
 			resultFileType = ResultFileType.PNG;
 		}
 		if (renderer.getAlreadyDone()) {
-			renderCode(renderer, response, request.getParameter(PARAM_RETURNHASH) != null, resultFileType);
+		    QueueElement queueElement = new QueueElement(renderer, response, request.getParameter(PARAM_RETURNHASH) != null, resultFileType, request
+                    .getParameter(PARAM_JSONP_CALLBACK));
+            renderCode(queueElement);
 		} else {
 			QueueElement queueElement = new QueueElement(createRenderer(lilypondCode, featureName, size), response, request
-					.getParameter(PARAM_RETURNHASH) != null, resultFileType);
+					.getParameter(PARAM_RETURNHASH) != null, resultFileType, request.getParameter(PARAM_JSONP_CALLBACK));
 			try {
 				synchronized (queueElement) {
 					boolean insertedInQueue = processingQueue.offer(queueElement);
