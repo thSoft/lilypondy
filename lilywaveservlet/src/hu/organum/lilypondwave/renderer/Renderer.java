@@ -15,13 +15,10 @@ public class Renderer {
 
 	private File baseDir;
 	private File jailedBaseDir;
-	private final String uniqueName;
-	private final String lilypondCode;
-	private final Integer resolution;
-	private final Settings settings;
-
 	private File jailDir;
-	private final String featureName;
+	private final Settings settings;
+	
+	private RendererConfiguration config;
 
 	private Map<String, String> getReplacements() {
 		Map<String, String> replacements = new HashMap<String, String>();
@@ -33,19 +30,19 @@ public class Renderer {
 		replacements.put("jail", jailDir.getPath());
 		replacements.put("dir", baseDir.getPath());
 		replacements.put("jailedBase", jailedBaseDir.getPath());
-		if (resolution != null) {
-			replacements.put("resolution", resolution.toString());
+		if (config.getResolution() != null) {
+            replacements.put("resolution", config.getResolution().toString());
 		}
-		replacements.put("hash", uniqueName);
+		replacements.put("hash", config.getUniqueName());
 		return replacements;
 	}
 
 	private void renderLilyPondCode(List<ProcessingCommand> commands) throws RenderingException {
-		File tempFile = new File(jailedBaseDir, uniqueName + ".ly");
+		File tempFile = new File(jailedBaseDir, config.getUniqueName() + ".ly");
 		Writer fileWriter;
 		try {
 			fileWriter = new OutputStreamWriter(new FileOutputStream(tempFile), "UTF-8");
-			fileWriter.write(lilypondCode);
+			fileWriter.write(config.getLilypondCode());
 			fileWriter.close();
 		} catch (IOException e) {
 			throw new RenderingException(e);
@@ -60,23 +57,20 @@ public class Renderer {
 		}
 	}
 
-	public Renderer(Settings settings, String uniqueName, String lilypondCode, String featureName, int resolution) {
+	public Renderer(Settings settings, RendererConfiguration config) {
 		this.settings = settings;
-		this.uniqueName = uniqueName;
-		this.lilypondCode = lilypondCode;
-		this.featureName = featureName;
-		this.resolution = resolution;
+		this.config = config;
 		this.baseDir = new File(settings.get("DIR"));
 		this.jailedBaseDir = new File(settings.get("JAIL") + settings.get("DIR"));
 		this.jailDir = new File(settings.get("JAIL"));
 	}
 	
 	public File getResultFile(ResultFileType resultFileType) {
-		return new File(jailDir, uniqueName + "." + resultFileType.getExtension());
+		return new File(jailDir, config.getUniqueName() + "." + resultFileType.getExtension());
 	}
 
 	public File getResultFile() {
-		ResultFileType resultFileType = Commands.getResultFileType(featureName);
+		ResultFileType resultFileType = Commands.getResultFileType(config.getFeatureName());
 		return getResultFile(resultFileType);
 	}
 
@@ -89,9 +83,9 @@ public class Renderer {
 		try {
 			File resultFile = getResultFile();
 			if (!getAlreadyDone()) {
-				renderLilyPondCode(Commands.getCommandList(featureName));
+				renderLilyPondCode(Commands.getCommandList(config.getFeatureName()));
 			}
-			RenderingResult result = new RenderingResult(resultFile, uniqueName, Commands.getResultFileType(featureName));
+			RenderingResult result = new RenderingResult(resultFile, config.getUniqueName(), Commands.getResultFileType(config.getFeatureName()));
 			return result;
 		} catch (RuntimeException e) {
 			e.printStackTrace();
@@ -104,7 +98,7 @@ public class Renderer {
 	}
 
 	public String getUniqueName() {
-		return uniqueName;
+		return config.getUniqueName();
 	}
 
 	public boolean resultExists(ResultFileType resultFileType) {
